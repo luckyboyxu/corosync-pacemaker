@@ -1,0 +1,105 @@
+corosync是集群框架引擎程序
+pacemaker是高可用集群资源管理器
+crmsh是pacemaker的命令行工具
+
+集群原理：
+  高可用架构由两个核心部分组成，一个是心跳检测，判断服务器是否正常运行；一个是资源转移，用来将公共资源在正常服务器和故障服务器之间搬动
+    1、corosync，心跳信息传输层，它是运行在每一个主机上的一个进程，通过组播的方式监测心跳，提供了一种集群模式，包含集群框架，集群成员管理，
+    通信方式，集群监测，但没有集群资源管理
+    2、Pacemaker是一个集群管理器。它利用推荐集群基础设施（OpenAIS 或heartbeat）提供的消息和成员能力，由辅助节点和系统进行故障检测和回收，
+    实现性群集服务（亦称资源）的高可用性。用于资源转移。
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+安装配置：
+
+  前提条件：
+    (1).各节点之间主机名互相解析
+      # vim /etc/hosts
+      192.168.18.201  node1.test.com  node1  
+      192.168.18.202  node2.test.com  node2
+    (2).各节点之间时间同步
+      # ntpdate 210.72.145.44
+    (3).各节点之间ssh互信
+      # ssh-keygen  -t rsa -f ~/.ssh/id_rsa  -P ''
+      # ssh-copy-id -i .ssh/id_rsa.pub root@node2.test.com
+    node2同样配置
+    
+  安装：
+    # yum install corosync* pacemaker* -y
+    ps:先检查yum配置，有可能影响版本的安装；直接pacemaker就好，会把依赖的corosync和crm自动安装好。
+  
+  关闭防火墙与SELinux:
+    # service iptables stop
+    # vim /etc/selinux/config
+        SELINUX=disabled
+        
+  corosync配置corosync.conf:
+    ##totem定义集群内各节点间是如何通信的,totem本是一种协议，专用于corosync专用于各节点间的协议，协议是有版本的
+    totem {
+        ##版本号
+        version: 2
+        ##安全认证on|off，使用corosync-keygen命令生成密钥
+        secauth: on
+        ##用于安全认证开启的线程，0为不基于线程模式工作
+        threads: 0
+        ##接口设置
+        interface {
+            ##环数量，如果一个主机有多块网卡，避免心跳信息回流
+            ringnumber: 0
+            ##心跳线使用的网段（本机网段为192.168.0.0/24）
+            bindnetaddr: 192.168.0.0
+            ##多播地址，可设置为239.255.x.x
+            mcastaddr: 239.165.17.17
+            ##多播地址监听的端口
+            mcastport: 5405
+            ##生存时间为1
+            ttl: 1
+        }
+    } 
+    ##定义日志信息   
+    logging {  
+    ##是否记录fileline     
+        fileline: off
+        ##是否将日志发往标准错误输出（屏幕）
+        to_stderr: no
+        ##是否记录在日志文件中
+        to_logfile: yes
+        ##日志文件目录
+        logfile: /var/log/cluster/corosync.log 
+        ##是否将日志发往系统日志 
+        to_syslog: no  
+        ##调试
+        debug: off 
+        ##是否打开时间戳
+        timestamp: on
+        ##是否包含AMF组件的日志信息
+        logger_subsys {
+            subsys: AMF
+            debug: off
+        }
+    }
+    service {
+        ver:    0
+        name:   pacemaker  #以插件方式运行pacemaker
+    }
+  验证网卡是否支持多播，如没有MULTICAST，手动打开
+      # ip link show
+      1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN 
+        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+      2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
+        link/ether 00:0c:29:de:67:fa brd ff:ff:ff:ff:ff:ff
+  创建安全认证文件，如/dev/random中的随机数不足1024，敲击键盘使其增加值1024
+      # corosync-keygen
+  启动服务
+      # service corosync start; ssh node2 'service corosync start'
+  查看corosync引擎是否正常启动：
+      # grep -e "Corosync Cluster Engine" -e "configuration file" /var/log/cluster/corosync.log
+  查看初始化成员节点通知是否正常发出：
+      # grep  TOTEM  /var/log/cluster/corosync.log
+  检查启动过程中是否有错误产生：
+      # grep ERROR: /var/log/cluster/corosync.log | grep -v unpack_resources
+  查看pacemaker是否正常启动：
+      # grep pcmk_startup /var/log/cluster/corosync.log
+      
+集群安装完成，查看集群状态信息，需要进入crm资源管理器看（见crm教程）
