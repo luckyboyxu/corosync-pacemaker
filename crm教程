@@ -1,0 +1,119 @@
+crmsh命令简介
+  1、查看配置信息
+    crm(live)# configure
+    crm(live)configure# show
+    node node1
+    node node2
+    property cib-bootstrap-options: \
+        dc-version=1.1.14-8.el6_8.2-70404b0 \
+        cluster-infrastructure="classic openais (with plugin)" \
+        expected-quorum-votes=2
+
+    2、因为无stonith设备，所以禁用stonith，stonith的值为布尔类型，true和false
+    crm(live)configure# property stonith-enabled=false
+
+    3、提交配置
+    crm(live)configure# commit
+
+    4、介绍node子命令
+    crm(live)configure# cd ..    #返回上一级
+    crm(live)# node
+    crm(live)node# help
+
+    attribute      Manage attributes
+    clearstate     Clear node state        #清理当前node的状态信息
+    delete       Delete node             #删除节点
+    fence        Fence node
+    maintenance    Put node into maintenance mode
+    online       Set node online        #将当前节点重新上线，standby转为online
+    ready       Put node into ready mode
+    server       Show node hostname or server address
+    show        Show node       #显示当前所有节点
+    standby       Put node into standby    #将当前节点转为备用
+    status       Show nodes' status as XML
+    status-attr    Manage status attributes
+    utilization    Manage utilization attributes
+
+    cd        Navigate the level structure
+    help       Show help (help topics for list of topics)
+    ls        List levels and commands    #指明级别和子命令列出当前可用节点
+    quit       Exit the interactive shell
+    up        Go back to previous level
+
+    5、介绍resource子命令
+    crm(live)# resource
+    crm(live)resource# help
+
+    ban        Ban a resource from a node    #禁止资源在一个节点
+    cleanup      Cleanup resource status       #清理资源状态
+    constraints    Show constraints affecting a resource    #显示影响资源的约束
+    demote       Demote a master-slave resource   #降级主从资源
+    failcount     Manage failcounts                #管理员错误状态统计数据
+    locate       Show the location of resources   #显示资源的位置
+    maintenance    Enable/disable per-resource maintenance mode #启用/禁用每个资源维护模式
+    manage       Put a resource into managed mode #资源定义为可被管理状态
+    meta        Manage a meta attribute          #管理meta 属性
+    move        Move a resource to another node  #将资源移动到另一个节点
+    operations     Show active resource operations  #显示活动的资源的操作
+    param       Manage a parameter of a resource #管理资源参数
+    promote      Promote a master-slave resource  
+    refresh      Refresh CIB from the LRM status
+    reprobe      Probe for resources not started by the CRM
+    restart      Restart resources           #重启一个资源
+    scores       Display resource scores     #查看资源
+    secret       Manage sensitive parameters
+    start       Start resources             #开启一个资源
+    status       Show status of resources    #资源当前状态
+    stop        Stop resources              #停止一个资源
+    trace       Start RA  
+    unmanage      Put a resource into unmanaged mode   #资源定义为不可被管理状态
+    untrace      Stop RA tracing
+    utilization    Manage a utilization attribute
+
+    6、介绍资源代理RA子命令
+    crm(live)# ra
+    crm(live)ra# help
+    classes       List classes and providers   #列出资源代理类型
+    info        Show meta data for a RA    #显示资源代理的帮助信息
+    list        List RA for a class (and provider)    #列出资源代理类型中所拥有的资源代理
+    providers      Show providers for a RA and a class
+    validate      Validate parameters for RA
+    
+    7、介绍configure子命令
+    node             define a cluster node #定义一个集群节点
+    primitive        define a resource #定义资源
+    monitor          add monitor operation to a primitive #对一个资源添加监控选项（如超时时间，启动失败后的操作）
+    group            define a group #定义一个组类型（包含一个或多个资源，这些资源可通过“组”这个资源统一进行调度）
+    clone            define a clone #定义一个克隆类型（可以在同一个集群内的多个节点运行多份克隆）
+    ms               define a master-slave resource #定义一个主从类型（集群内的节点只能有一个运行主资源，其它从的做备用）
+    rsc_template     define a resource template #定义一个资源模板
+    location         a location preference #定义位置约束优先级（默认运行于那一个节点（如果位置约束的值相同，默认倾向性那一个高，就在那一个节点上运行））
+    colocation       colocate resources #排列约束资源（多个资源在一起的可能性）
+    order            order resources #顺序约束，定义资源在同一个节点上启动时的先后顺序
+    rsc_ticket       resources ticket dependency
+    property         set a cluster property #设置集群属性
+    rsc_defaults     set resource defaults #设置资源默认属性（粘性）
+    fencing_topology node fencing order #隔离节点顺序
+    role             define role access rights #定义角色的访问权限
+    user             define user access rights #定义用用户访问权限
+    op_defaults      set resource operations defaults #设置资源默认选项
+    schema           set or display current CIB RNG schema
+    show             display CIB objects #显示集群信息库对
+    edit             edit CIB objects #编辑集群信息库对象（vim模式下编辑）
+    filter           filter CIB objects #过滤CIB对象
+    delete           delete CIB objects #删除CIB对象
+    default-timeouts set timeouts for operations to minimums from the meta-data
+    rename           rename a CIB object #重命名CIB对象
+    modgroup         modify group #改变资源组
+    refresh          refresh from CIB #重新读取CIB信息
+    erase            erase the CIB #清除CIB信息
+    ptest            show cluster actions if changes were committed
+    rsctest          test resources as currently configured
+    cib              CIB shadow management
+    cibstatus        CIB status management and editing
+    template         edit and import a configuration from a template
+    commit           commit the changes to the CIB #将更改后的信息提交写入CIB
+    verify           verify the CIB with crm_verify #CIB语法验证
+    upgrade          upgrade the CIB to version 1.0
+    save             save the CIB to a file #将当前CIB导出到一个文件中（导出的文件存于切换crm 之前的目录）
+    load             import the CIB from a file #从文件内容载入CIB
